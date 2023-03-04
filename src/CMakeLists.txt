@@ -1,0 +1,1 @@
+add_library(lde STATIC lde_x86.c lde_x86_64.c)
