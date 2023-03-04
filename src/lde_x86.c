@@ -10,8 +10,9 @@ May contain errors...
 */
 
 #include "../lde.h"
+#include "helpers.h"
 
-static uint32_t TABLE_PREFIX[8] = 
+static const uint32_t TABLE_PREFIX[8] = 
 {
     /*0123456789ABCDEF0123456789ABCDEF*/
     0b00000000000000000000000000000000,// 0
@@ -25,7 +26,7 @@ static uint32_t TABLE_PREFIX[8] =
 };
 
 //---- One-byte opcodes ----
-static uint32_t TABLE_MODRM_A[8] = 
+static const uint32_t TABLE_MODRM_A[8] =
 {
     0b11110000111100001111000011110000,// 0
     0b11110000111100001111000011110000,// 2
@@ -37,7 +38,7 @@ static uint32_t TABLE_MODRM_A[8] =
     0b00000000000000000000001100000011,// E
 };
 
-static uint32_t TABLE_IMM8_A[8] =
+static const uint32_t TABLE_IMM8_A[8] =
 {
     0b00001000000010000000100000001000,// 0
     0b00001000000010000000100000001000,// 2
@@ -49,7 +50,7 @@ static uint32_t TABLE_IMM8_A[8] =
     0b11111111000100000000000000000000,// E
 };
 
-static uint32_t TABLE_IMM_A[8] = 
+static const uint32_t TABLE_IMM_A[8] =
 {
     0b00000100000001000000010000000100,// 0
     0b00000100000001000000010000000100,// 2
@@ -62,7 +63,7 @@ static uint32_t TABLE_IMM_A[8] =
 };
 
 //---- Two-byte opcodes ----
-static uint32_t TABLE_MODRM_B[8] = 
+static const uint32_t TABLE_MODRM_B[8] =
 {
     0b11110000000001001111111111111111,// 0
     0b00000000111111110000000000000000,// 2
@@ -74,7 +75,7 @@ static uint32_t TABLE_MODRM_B[8] =
     0b11111111111111111111111111111111,// E
 };
 
-static uint32_t TABLE_INVALID_B[8] = 
+static const uint32_t TABLE_INVALID_B[8] =
 {
     0b00001000001010110000000000000000,// 0
     0b00000101000000000000001011111111,// 2
@@ -87,61 +88,12 @@ static uint32_t TABLE_INVALID_B[8] =
 };
 
 //---- Three-byte opcodes  ----
-static uint32_t TABLE_INVALID_C[2] = 
+static const uint32_t TABLE_INVALID_C[2] =
 {
     0b00000000000011110111001011110001,// 0
     0b00000011000011110000001000000000,// 2
 };
 
-static inline bool find_8(const uint32_t* array, uint8_t val)
-{
-    return ((array[(val >> 5) & 7] & (0x80000000 >> (val & 0x1F))) != 0);
-}
-
-static inline bool find_2(const uint32_t* array, uint8_t val)
-{
-    if (val < 0x40) 
-    {
-        return ((array[((val >> 5) & 7)] & (0x80000000 >> (val & 0x1F))) != 0);
-    }
-    
-    return false;
-}
-
-static inline bool in_range(uint8_t lo, uint8_t hi, uint8_t val)
-{
-    return ((val >= lo) && (val < hi));
-}
-
-typedef struct
-{
-    const uint8_t* start;
-    uint32_t length;
-    uint32_t position;
-} byte_iterator;
-
-static byte_iterator byte_iterator_init(const uint8_t* array, uint32_t size)
-{
-    byte_iterator it = 
-    { 
-        .start = array, 
-        .length = size, 
-        .position = 0 
-    };
-
-    return it;
-}
-
-static bool byte_iterator_next(byte_iterator* it, uint8_t* v)
-{
-    if (it->position >= it->length)
-        return false;
-
-    *v = it->start[it->position];
-    ++it->position;
-
-    return true;
-}
 
 LdeInstructionLength lde_get_instruction_length_x86(const void* opcode, uint32_t length)
 {
@@ -198,7 +150,7 @@ LdeInstructionLength lde_get_instruction_length_x86(const void* opcode, uint32_t
             bool valid = false;
             if (op < 0x40)
             {
-                valid = find_2(TABLE_INVALID_C, op);
+                valid = !find_2(TABLE_INVALID_C, op);
             }
             else
             {
