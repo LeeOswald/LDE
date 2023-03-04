@@ -61,6 +61,8 @@ TEST(x86_64, simple)
     EXPECT_EQ(lde_get_instruction_length_x86_64("\xF3\xA4", 2).total_len, 2);
     // mov r15, ********
     EXPECT_EQ(lde_get_instruction_length_x86_64("\x49\xBF********", 10).total_len, 10);
+
+    EXPECT_EQ(lde_get_instruction_length_x86_64("\x40\x55\x48\x83\xEC\xFC\x00\x80", 8).total_len, 2);
 }
 
 int main(int argc, char** argv)
